@@ -4,8 +4,11 @@
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "files": [
+    "build/**/*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -15,7 +18,7 @@
     "rule",
     "interpreter"
   ],
-  "author": "Krasilnikov Roman <x0kill@ya.ru>",
+  "author": "x0k <x0kill@ya.ru>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/x0k/rule-interpreter/issues"

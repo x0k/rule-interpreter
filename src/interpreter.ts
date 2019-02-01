@@ -1,4 +1,4 @@
-import { operations, Handler, Operation, IOperations } from './operations';
+import { operations, Operation, IOperations } from './operations';
 import { buildHandler } from './builder';
 import { Getter } from './getter';
 
