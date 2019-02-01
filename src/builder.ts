@@ -1,14 +1,5 @@
-import { Handler, IOperations, operations } from './operations';
-
-type Getter = (array: any[], index: number) => any;
-
-const buildGetter = (operations: IOperations) => (array: any[], index: number) => {
-  const el = array[index];
-  if (el in operations) {
-    return operations[el];
-  }
-  return el;
-};
+import { Handler } from './operations';
+import { Getter } from './getter';
 
 const isArr = (value: any) => Array.isArray(value);
 
@@ -32,8 +23,7 @@ const perform = (flow: any[], getter: Getter): Handler => {
   return parameters.length === 1 ? parameters[0] : parameters;
 };
 
-export const buildHandler = (operations: IOperations, handlerFlow: any[]): Handler => {
-  const getter = buildGetter(operations);
+export const buildHandler = (handlerFlow: any[], getter: Getter): Handler => {
   const expression = perform(handlerFlow, getter);
   return (input, output) => expression(input, output);
-}
+};

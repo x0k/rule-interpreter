@@ -1,20 +1,28 @@
 import { operations, Handler, Operation, IOperations } from './operations';
 import { buildHandler } from './builder';
+import { Getter } from './getter';
 
 export interface IHandlerBuilder {
-  toHandler: (expression: any[]) => Handler;
+  toHandler: (expression: any[]) => () => any;
 }
 
 export class Interpreter implements IHandlerBuilder {
 
-  private operations: IOperations;
+  private operations: IOperations = { ...operations };
+  private getter: Getter;
 
-  constructor (private input: any, private output: any) {
-    this.operations = { ...operations };
+  constructor (private input: any = {}, private output: any = [], getter?: Getter) {
+    this.getter = getter || ((array: any[], index: number) => {
+      const el = array[index];
+      if (el in this.operations) {
+        return this.operations[el];
+      }
+      return el;
+    });
   }
 
   public toHandler (handlerFlow: any[]): () => any {
-    return buildHandler(this.operations, handlerFlow).bind(this, this.input, this.output);
+    return buildHandler(handlerFlow, this.getter).bind(this, this.input, this.output);
   }
 
   public addOperation (name: string, operation: Operation) {

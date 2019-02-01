@@ -1,3 +1,4 @@
+import { buildHandler } from './builder';
 import { Interpreter } from './interpreter';
 
-export { Interpreter };
+export { buildHandler, Interpreter };
