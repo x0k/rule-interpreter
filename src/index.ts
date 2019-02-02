@@ -1,4 +1,4 @@
-import { buildHandler } from './builder';
-import { Interpreter } from './interpreter';
+import { Operation } from './operation';
+import { buildAction } from './builder';
 
-export { buildHandler, Interpreter };
+export { Operation, buildAction };
