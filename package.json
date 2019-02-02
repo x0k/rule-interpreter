@@ -8,7 +8,11 @@
     "build/**/*"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "ava",
+    "lint": "tslint -p tsconfig.json",
+    "prepare" : "npm run build",
+    "prepublishOnly" : "npm test && npm run lint"
   },
   "repository": {
     "type": "git",
@@ -24,11 +28,14 @@
     "url": "https://github.com/x0k/rule-interpreter/issues"
   },
   "homepage": "https://github.com/x0k/rule-interpreter#readme",
-  "dependencies": {
-
-  },
   "devDependencies": {
+    "ava": "^1.2.0",
     "tslint": "^5.12.1",
     "typescript": "^3.2.4"
+  },
+  "ava": {
+    "files": [
+      "tests/*.js"
+    ]
   }
 }
