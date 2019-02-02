@@ -12,7 +12,7 @@ export class Operation<T> {
     return this.evaluator(this.action, ...values);
   }
 
-  private evaluator (action: TAction<T>, ...values: T[]) {
+  protected evaluator (action: TAction<T>, ...values: T[]) {
     return action(...values);
   }
 
