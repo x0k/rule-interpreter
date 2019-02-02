@@ -1,6 +1,6 @@
 {
   "name": "rule-interpreter",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -11,8 +11,8 @@
     "build": "tsc",
     "test": "ava",
     "lint": "tslint -p tsconfig.json",
-    "prepare" : "npm run build",
-    "prepublishOnly" : "npm test && npm run lint"
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint"
   },
   "repository": {
     "type": "git",
