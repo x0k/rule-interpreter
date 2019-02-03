@@ -32,12 +32,8 @@ const actions = {
 
 class SimpleOperation extends Operation {
 
-  eval (...values) {
-    return () => super.eval(...values);
-  }
-
   evaluator (action, ...values) {
-    return super.evaluator(action, ...values.map(val => val()))
+    return () => super.evaluator(action, ...values.map(val => val()))
   }
 
 }

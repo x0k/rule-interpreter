@@ -4,12 +4,8 @@ import { Operation, buildAction } from '../build/index';
 
 class CustomOperation extends Operation {
 
-  eval (...values) {
-    return (input, output) => super.eval(input, output, ...values);
-  }
-
-  evaluator (action, input, output, ...values) {
-    return super.evaluator(action(input, output), ...values.map(val => val(input, output)));
+  evaluator (action, ...values) {
+    return (input, output) => super.evaluator(action(input, output), ...values.map(val => val(input, output)));
   }
 
 }
