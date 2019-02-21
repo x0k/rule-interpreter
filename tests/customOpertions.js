@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { Operation, buildAction } from '../build/index';
+import { Operation, buildActions } from '../build/index';
 
 class CustomOperation extends Operation {
 
@@ -16,7 +16,6 @@ const actions = {
     return value;
   },
   del: (input, output) => (name) => delete input[name],
-  get: (input, output) => (name) => input[name],
   push: (input, output) => (data) => output.push(data),
 };
 
@@ -24,19 +23,13 @@ test('Variables', t => {
   t.plan(2);
   const data = {};
   const out = [];
-  const getter = (arr, id) => {
-    const el = arr[id];
-    if (el in actions) {
+  const getter = (el) => {
+    if (el in actions)
       return new CustomOperation(el, actions[el]);
-    } else if (el in data) {
-      return data[el];
-    }
-    return el;
+    return (input, output) => el in input ? input[el] : el;
   };
-  const setFlow = [ 'declare', 'var1', 10 ];
-  const set = buildAction(setFlow, getter);
-  const pushFlow = [ 'push', 'get', 'var1' ];
-  const push = buildAction(pushFlow, getter);
+  const flow = [ ['var1', 10], 'declare', ['var1'], 'push'];
+  const [ set, push ] = buildActions(flow, getter);
   set(data, out);
   t.deepEqual(data, { var1: 10 });
   push(data, out);

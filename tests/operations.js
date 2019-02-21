@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { buildAction, Operation } from '../build/index';
+import { buildActions, Operation } from '../build';
 
 const actions = {
   '+': (a, ...b) => b.reduce((acc, val) => acc + val, a),
@@ -38,33 +38,31 @@ class SimpleOperation extends Operation {
 
 }
 
-const getter = (arr, id) => {
-  const el = arr[id];
-  if (el in actions) {
+const getter = (el) => {
+  if (el in actions)
     return new SimpleOperation(el, actions[el]);
-  }
-  return el;
+  return () => el;
 };
 
 test('Simple arithmetic', t => {
-  const data = [ '+', [ 1, 1 ] ];
-  const action = buildAction(data, getter);
-  t.is(action(), 2);
+  const data = [ [ 2, 1 ], '-' ];
+  const [ action ] = buildActions(data, getter);
+  t.is(action(), 1);
 });
 
 test('Complex arithmetic', t => {
-  //              6      5      4        3                2        1
-  const data = [ '-', [ '+', [ '*', [ [ '-', [ 4, 2 ] ], '/', [ [ '-', [ 12, 6 ] ], 2 ] ], 4 ], 10 ] ];
-  const action = buildAction(data, getter);
+  // 10 - ((12 - 6) / 2 * (4 - 2) + 4)
+  const data = [ [10, [[[[12, 6], '-', 2], '/', [4, 2], '-'], '*', 4], '+'], '-' ];
+  const [ action ] = buildActions(data, getter);
   t.is(action(), 0);
 });
 
 test('Logical operations', t => {
   t.plan(2);
-  const data1 = [ '&', [ true, 'string literal', 123, {}, '!', [ false ] ] ];
-  const action1 = buildAction(data1, getter);
+  const data1 = [ [ true, 'string literal', 123, {}, false, '!' ], '&' ];
+  const [ action1 ] = buildActions(data1, getter);
   t.is(action1(), true);
-  const data2 = [ '|', [ '!', [true], '!', ['string literal'], '!', [123], '!', [{}] ] ];
-  const action2 = buildAction(data2, getter);
+  const data2 = [ [ true, '!', 'string literal', '!', 123, '!', [{}], '!' ], '|' ];
+  const [ action2 ] = buildActions(data2, getter);
   t.is(action2(), false);
 });

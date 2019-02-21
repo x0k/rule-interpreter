@@ -1,4 +1,4 @@
 import { Operation } from './operation';
-import { buildAction } from './builder';
+import { buildActions } from './builder';
 
-export { Operation, buildAction };
+export { Operation, buildActions };
