@@ -1,4 +1,10 @@
-import { Operation } from './operation';
-import { buildActions } from './builder';
+import { IContext, TAction, TExpression } from './common'
+import { buildActions } from './action';
 
-export { Operation, buildActions };
+export default buildActions
+
+export {
+  IContext,
+  TAction,
+  TExpression
+};
