@@ -8,11 +8,11 @@
     "build/**/*"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf build && tsc",
     "test": "ava",
     "lint": "eslint src/*.ts",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint"
+    "prepare": "yarn build",
+    "prepublishOnly": "yarn test && yarn lint"
   },
   "repository": {
     "type": "git",
