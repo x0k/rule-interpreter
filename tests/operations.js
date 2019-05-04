@@ -1,14 +1,14 @@
 import test from 'ava';
 
-import { buildActions, Operation } from '../build';
+import buildActions from '../build';
 
-const actions = {
-  '+': (a, ...b) => b.reduce((acc, val) => acc + val, a),
-  '-': (a, ...b) => b.reduce((acc, val) => acc - val, a),
-  '/': (a, ...b) => b.reduce((acc, val) => acc / val, a),
-  '*': (a, ...b) => b.reduce((acc, val) => acc * val, a),
-  '=': (a, ...b) => b.reduce((acc, val) => acc === val ? acc : false, a),
-  '%': (a, ...b) => b.reduce((acc, val) => acc % val, a),
+const operations = {
+  '+': (a, b) => a + b,
+  '-': (a, b) => a - b,
+  '/': (a, b) => a / b,
+  '*': (a, b) => a * b,
+  '=': (a, b) => a === b,
+  '%': (a, b) => a % b,
   '!': (operand) => !operand,
   '&': (...list) => {
     const len = list.length;
@@ -30,39 +30,40 @@ const actions = {
   },
 };
 
-class SimpleOperation extends Operation {
-
-  evaluator (action, ...values) {
-    return () => super.evaluator(action, ...values.map(val => val()))
-  }
-
+const context = {
+  'a': 10,
+  'b': 20
 }
 
-const getter = (el) => {
-  if (el in actions)
-    return new SimpleOperation(el, actions[el]);
-  return () => el;
-};
+function buildAction (expression) {
+  return buildActions(expression, operations)[0]
+}
 
 test('Simple arithmetic', t => {
-  const data = [ [ 2, 1 ], '-' ];
-  const [ action ] = buildActions(data, getter);
-  t.is(action(), 1);
+  const data = [ '@-', 2, 1 ];
+  const action = buildAction(data)
+  t.is(action(context), 1);
 });
 
 test('Complex arithmetic', t => {
-  // 10 - ((12 - 6) / 2 * (4 - 2) + 4)
-  const data = [ [10, [[[[12, 6], '-', 2], '/', [4, 2], '-'], '*', 4], '+'], '-' ];
-  const [ action ] = buildActions(data, getter);
-  t.is(action(), 0);
+  //              0        10   6    3    6              2
+  const data = [ '@-', 10, '@+', '@*', '@/', '@-', 12, 6, 2, '@-', 4, 2, 4 ];
+  const action = buildAction(data);
+  t.is(action(context), 0);
+});
+
+test('Arithmetic with variables', t => {
+  const data = [ '@/', '%b', '%a' ];
+  const action = buildAction(data)
+  t.is(action(context), 2);
 });
 
 test('Logical operations', t => {
   t.plan(2);
-  const data1 = [ [ true, 'string literal', 123, {}, false, '!' ], '&' ];
-  const [ action1 ] = buildActions(data1, getter);
+  const data1 = [ '@&', true, 'string literal', 123, {}, '@!', false ];
+  const action1 = buildAction(data1);
   t.is(action1(), true);
-  const data2 = [ [ true, '!', 'string literal', '!', 123, '!', [{}], '!' ], '|' ];
-  const [ action2 ] = buildActions(data2, getter);
+  const data2 = [ '@|', '@!', true, '@!', 'string literal', '@!', 123, '@!', [{}] ];
+  const action2 = buildAction(data2);
   t.is(action2(), false);
 });
