@@ -13,18 +13,24 @@ type TAction = (args: TExpression) => (operation: TOperation) => any
 type TActions = IDictionary<TAction>
 
 function getType (element: any) {
-  switch (typeof element === 'string' && element[0]) {
+  switch (typeof element === 'string' && element[0] || Array.isArray(element)) {
     case '$':
       return 'action'
     case '@':
       return 'function'
+    case true:
+      return 'array'
     default:
       return 'value'
   }
 }
 
+function reduce<T> (array: T[], reducer: (acc: T[], element: T) => T[]) {
+  return array.reverse().reduce(reducer, [])
+}
+
 function buildActionReducer (actions: TActions, operations: TOperations) {
-  return (data: TExpression, element: any) => {
+  const actionReducer = (data: TExpression, element: any): TExpression => {
     const type = getType(element)
     switch (type) {
       case 'action': {
@@ -34,15 +40,18 @@ function buildActionReducer (actions: TActions, operations: TOperations) {
         while (i < len) {
           action = action(data[i++])
         }
-        return [ action, ...data.slice(2) ]
+        return [ action, ...data.slice(len) ]
       }
       case 'function': {
         return [ operations[element], ...data ]
       }
+      case 'array':
+        return [ reduce(element, actionReducer), ...data ]
       case 'value':
-        return [element, ...data]
+        return [ element, ...data ]
     }
   }
+  return actionReducer
 }
 
 function buildPrefixSetter<T> (dictionary: IDictionary<T>, prefix: string) {
@@ -77,5 +86,5 @@ export function buildActionsBuilder (operations: TOperations, options: IOptions 
 
   const actionReducer = buildActionReducer(actionsWithPrefix, operationsWithPrefix)
 
-  return (expression: TExpression) => expression.reverse().reduce(actionReducer, [])
+  return (expression: TExpression) => reduce(expression, actionReducer)
 }
