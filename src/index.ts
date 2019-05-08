@@ -13,7 +13,7 @@ type TAction = (args: TExpression) => (operation: TOperation) => any
 type TActions = IDictionary<TAction>
 
 function getType (element: any) {
-  switch (typeof element === 'string' && element[0] || '') {
+  switch (typeof element === 'string' && element[0]) {
     case '$':
       return 'action'
     case '@':
@@ -30,7 +30,8 @@ function buildActionReducer (actions: TActions, operations: TOperations) {
       case 'action': {
         let i = 0
         let action: any = actions[element]
-        while (i < 2 && data.length) {
+        const len = Math.min(2, data.length)
+        while (i < len) {
           action = action(data[i++])
         }
         return [ action, ...data.slice(2) ]
@@ -48,7 +49,18 @@ function buildPrefixSetter<T> (dictionary: IDictionary<T>, prefix: string) {
   return (acc: IDictionary<T>, key: string) => ({ ...acc, [prefix + key]: dictionary[key] })
 }
 
-export function buildActionsBuilder (operations: TOperations) {
+interface IOptions {
+  actionsPrefix?: string
+  operationsPrefix?: string
+}
+
+export function buildActionsBuilder (operations: TOperations, options: IOptions = {}) {
+  const { actionsPrefix = '$', operationsPrefix = '@' } = options
+
+  if (actionsPrefix === operationsPrefix) {
+    throw new Error('Identical prefixes are not allowed')
+  }
+
   const actions: TActions = {
     eval: (args) => (operation) => operation(...args),
     bind: (args) => (operation) => operation.bind(null, ...args),
@@ -59,9 +71,9 @@ export function buildActionsBuilder (operations: TOperations) {
     any: (args) => (operation) => args.every(operation)
   }
 
-  const actionsWithPrefix = Object.keys(actions).reduce(buildPrefixSetter(actions, '$'), {})
+  const actionsWithPrefix = Object.keys(actions).reduce(buildPrefixSetter(actions, actionsPrefix), {})
 
-  const operationsWithPrefix = Object.keys(operations).reduce(buildPrefixSetter(operations, '@'), {})
+  const operationsWithPrefix = Object.keys(operations).reduce(buildPrefixSetter(operations, operationsPrefix), {})
 
   const actionReducer = buildActionReducer(actionsWithPrefix, operationsWithPrefix)
 
