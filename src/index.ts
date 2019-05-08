@@ -8,54 +8,62 @@ export type TOperation = (...args: TExpression) => any
 
 export type TOperations = IDictionary<TOperation>
 
-type TAction = (args: TExpression, operation: TOperation) => any
+type TAction = (args: TExpression) => (operation: TOperation) => any
 
 type TActions = IDictionary<TAction>
 
-type TNamedAction = (args: TExpression, name: string) => any
-
-type TNamedActions = IDictionary<TNamedAction>
-
 function getType (element: any) {
-  return typeof element === 'string' && element[0] === '$' ? 'action' : 'value'
+  switch (typeof element === 'string' && element[0] || '') {
+    case '$':
+      return 'action'
+    case '@':
+      return 'function'
+    default:
+      return 'value'
+  }
 }
 
-function getName (nameWithPrefix: string) {
-  return nameWithPrefix.slice(1)
-}
-
-function buildActionReducer (actions: TNamedActions) {
+function buildActionReducer (actions: TActions, operations: TOperations) {
   return (data: TExpression, element: any) => {
     const type = getType(element)
     switch (type) {
-      case 'action':
-        const name = getName(element)
-        const args = data.slice(0, 2)
-        return [ actions[name](args[0], args[1]), ...data.slice(2) ]
+      case 'action': {
+        let i = 0
+        let action: any = actions[element]
+        while (i < 2 && data.length) {
+          action = action(data[i++])
+        }
+        return [ action, ...data.slice(2) ]
+      }
+      case 'function': {
+        return [ operations[element], ...data ]
+      }
       case 'value':
-        return [ element, ...data ]
+        return [element, ...data]
     }
   }
 }
 
+function buildPrefixSetter<T> (dictionary: IDictionary<T>, prefix: string) {
+  return (acc: IDictionary<T>, key: string) => ({ ...acc, [prefix + key]: dictionary[key] })
+}
+
 export function buildActionsBuilder (operations: TOperations) {
   const actions: TActions = {
-    eval: (args, operation) => operation(...args),
-    bind: (args, operation) => operation.bind(null, ...args),
-    map: (args, operation) => args.map(operation),
-    reduce: (args, operation) => args.reduce(operation),
-    filter: (args, operation) => args.filter(operation),
-    some: (args, operation) => args.some(operation),
-    any: (args, operation) => args.every(operation)
+    eval: (args) => (operation) => operation(...args),
+    bind: (args) => (operation) => operation.bind(null, ...args),
+    map: (args) => (operation) => args.map(operation),
+    reduce: (args) => (operation) => args.reduce(operation),
+    filter: (args) => (operation) => args.filter(operation),
+    some: (args) => (operation) => args.some(operation),
+    any: (args) => (operation) => args.every(operation)
   }
 
-  function withOperation (acc: TNamedActions, action: string) {
-    return { ...acc, [action]: (args: TExpression, operation: string) => actions[action](args, operations[operation]) }
-  }
+  const actionsWithPrefix = Object.keys(actions).reduce(buildPrefixSetter(actions, '$'), {})
 
-  const curriedActions: TNamedActions = Object.keys(actions).reduce(withOperation, {})
+  const operationsWithPrefix = Object.keys(operations).reduce(buildPrefixSetter(operations, '@'), {})
 
-  const actionReducer = buildActionReducer(curriedActions)
+  const actionReducer = buildActionReducer(actionsWithPrefix, operationsWithPrefix)
 
-  return (expression: TExpression) => expression.reverse().reduce(actionReducer)
+  return (expression: TExpression) => expression.reverse().reduce(actionReducer, [])
 }
