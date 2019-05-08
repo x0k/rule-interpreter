@@ -40,22 +40,23 @@ function buildActionReducer (actions: TActions, operations: TOperations) {
         while (i < len) {
           action = action(data[i++])
         }
-        return [ action, ...data.slice(len) ]
+        return [action, ...data.slice(len)]
       }
       case 'function': {
-        return [ operations[element], ...data ]
+        return [operations[element], ...data]
       }
       case 'array':
-        return [ reduce(element, actionReducer), ...data ]
+        return [reduce(element, actionReducer), ...data]
       case 'value':
-        return [ element, ...data ]
+        return [element, ...data]
     }
   }
   return actionReducer
 }
 
-function buildPrefixSetter<T> (dictionary: IDictionary<T>, prefix: string) {
-  return (acc: IDictionary<T>, key: string) => ({ ...acc, [prefix + key]: dictionary[key] })
+function setPrefix<T> (dictionary: IDictionary<T>, prefix: string) {
+  const prefixSetter = (dictionary: IDictionary<T>, key: string) => ({ ...dictionary, [prefix + key]: dictionary[key] })
+  return Object.keys(dictionary).reduce(prefixSetter, {})
 }
 
 interface IOptions {
@@ -80,9 +81,9 @@ export function buildActionsBuilder (operations: TOperations, options: IOptions 
     any: (args) => (operation) => args.every(operation)
   }
 
-  const actionsWithPrefix = Object.keys(actions).reduce(buildPrefixSetter(actions, actionsPrefix), {})
+  const actionsWithPrefix = setPrefix(actions, actionsPrefix)
 
-  const operationsWithPrefix = Object.keys(operations).reduce(buildPrefixSetter(operations, operationsPrefix), {})
+  const operationsWithPrefix = setPrefix(operations, operationsPrefix)
 
   const actionReducer = buildActionReducer(actionsWithPrefix, operationsWithPrefix)
 
