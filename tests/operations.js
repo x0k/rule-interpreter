@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import buildActions from '../build'
+import { buildActionsBuilder } from '../build'
 
 const operations = {
   '+': (a, b) => a + b,
@@ -30,40 +30,30 @@ const operations = {
   }
 }
 
-const context = {
-  'a': 10,
-  'b': 20
-}
+const actionsBuilder = buildActionsBuilder(operations)
 
 function buildAction (expression) {
-  return buildActions(expression, operations)[0]
+  return actionsBuilder(expression)[0]
 }
 
 test('Simple arithmetic', t => {
-  const data = [ '@-', 2, 1 ]
+  const data = [ '$eval', [ 2, 1 ], '@-' ]
   const action = buildAction(data)
-  t.is(action(context), 1)
+  t.is(action, 1)
 })
 
-test('Complex arithmetic', t => {
-  //              0        10   6    3    6              2
-  const data = [ '@-', 10, '@+', '@*', '@/', '@-', 12, 6, 2, '@-', 4, 2, 4 ]
+test('Arithmetic with variable', t => {
+  const data = [ '$bind', [ 4 ], '@/' ]
   const action = buildAction(data)
-  t.is(action(context), 0)
+  t.is(action(2), 2)
 })
 
-test('Arithmetic with variables', t => {
-  const data = [ '@/', '%b', '%a' ]
-  const action = buildAction(data)
-  t.is(action(context), 2)
-})
-
-test('Logical operations', t => {
-  t.plan(2)
-  const data1 = [ '@&', true, 'string literal', 123, {}, '@!', false ]
-  const action1 = buildAction(data1)
-  t.is(action1(), true)
-  const data2 = [ '@|', '@!', true, '@!', 'string literal', '@!', 123, '@!', [{}] ]
-  const action2 = buildAction(data2)
-  t.is(action2(), false)
-})
+// test('Logical operations', t => {
+//   t.plan(2)
+//   const data1 = [ '@&', true, 'string literal', 123, {}, '@!', false ]
+//   const action1 = buildAction(data1)
+//   t.is(action1(), true)
+//   const data2 = [ '@|', '@!', true, '@!', 'string literal', '@!', 123, '@!', [{}] ]
+//   const action2 = buildAction(data2)
+//   t.is(action2(), false)
+// })
