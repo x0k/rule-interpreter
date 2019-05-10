@@ -37,15 +37,15 @@ function buildAction (expression) {
 }
 
 test('Simple arithmetic', t => {
-  const data = [ '$eval', [ 2, 1 ], '@-' ]
-  const action = buildAction(data)
-  t.is(action, 1)
+  const expression = [ '@-', [ 2, 1 ] ]
+  const action = buildAction(expression)
+  t.is(action(), 1)
 })
 
 test('Arithmetic with variable', t => {
-  const data = [ '$bind', [ 4 ], '@/' ]
-  const action = buildAction(data)
-  t.is(action(2), 2)
+  const expression = [ '@/', [ 20 ] ]
+  const action = buildAction(expression)
+  t.is(action(4), 5)
 })
 
 // test('Logical operations', t => {
