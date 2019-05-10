@@ -8,18 +8,25 @@ export type TOperation = (...args: TExpression) => any
 
 export type TOperations = IDictionary<TOperation>
 
-type TAction = (args: TExpression) => (operation: TOperation) => any
+type TAction = (operation: TOperation) => (...args: TExpression) => any
 
 type TActions = IDictionary<TAction>
 
+function toType (element: any) {
+  return (typeof element === 'string' && element[0]) ||
+    (Array.isArray(element) && 'array') ||
+    typeof element
+}
+
 function getType (element: any) {
-  switch (typeof element === 'string' && element[0] || Array.isArray(element)) {
+  const type = toType(element)
+  switch (type) {
     case '$':
       return 'action'
     case '@':
       return 'function'
-    case true:
-      return 'array'
+    case 'array':
+      return type
     default:
       return 'value'
   }
@@ -29,6 +36,13 @@ function reduce<T> (array: T[], reducer: (acc: T[], element: T) => T[]) {
   return array.reverse().reduce(reducer, [])
 }
 
+function toExpression (element: any): TExpression {
+  if (!Array.isArray(element)) {
+    throw new Error(`Function haven't default args`)
+  }
+  return element
+}
+
 function buildActionReducer (actions: TActions, operations: TOperations) {
   const actionReducer = (data: TExpression, element: any): TExpression => {
     const type = getType(element)
@@ -36,14 +50,19 @@ function buildActionReducer (actions: TActions, operations: TOperations) {
       case 'action': {
         let i = 0
         let action: any = actions[element]
-        const len = Math.min(2, data.length)
-        while (i < len) {
+        if (data.length) {
           action = action(data[i++])
         }
-        return [action, ...data.slice(len)]
+        if (data.length > 1) {
+          const args = data[i++]
+          action = action(...args)
+        }
+        return [action, ...data.slice(i)]
       }
       case 'function': {
-        return [operations[element], ...data]
+        const defaultArgs = toExpression(data[0])
+        const operation = (...args: TExpression) => operations[element].apply(null, defaultArgs.concat(args))
+        return [operation, ...data.slice(1)]
       }
       case 'array':
         return [reduce(element, actionReducer), ...data]
@@ -55,13 +74,20 @@ function buildActionReducer (actions: TActions, operations: TOperations) {
 }
 
 function setPrefix<T> (dictionary: IDictionary<T>, prefix: string) {
-  const prefixSetter = (dictionary: IDictionary<T>, key: string) => ({ ...dictionary, [prefix + key]: dictionary[key] })
+  const prefixSetter = (acc: IDictionary<T>, key: string) => ({ ...acc, [prefix + key]: dictionary[key] })
   return Object.keys(dictionary).reduce(prefixSetter, {})
 }
 
 interface IOptions {
   actionsPrefix?: string
   operationsPrefix?: string
+}
+
+function toOperation (action: any) : TOperation {
+  if (!action || typeof action !== 'function') {
+    throw new Error(`Invalid action argument: ${action}`)
+  }
+  return action
 }
 
 export function buildActionsBuilder (operations: TOperations, options: IOptions = {}) {
@@ -72,13 +98,17 @@ export function buildActionsBuilder (operations: TOperations, options: IOptions 
   }
 
   const actions: TActions = {
-    eval: (args) => (operation) => operation(...args),
-    bind: (args) => (operation) => operation.bind(null, ...args),
-    map: (args) => (operation) => args.map(operation),
-    reduce: (args) => (operation) => args.reduce(operation),
-    filter: (args) => (operation) => args.filter(operation),
-    some: (args) => (operation) => args.some(operation),
-    any: (args) => (operation) => args.every(operation)
+    eval: (operation) => (...args) => operation(...args),
+    map: (operation) => (...args) => args.map(operation),
+    reduce: (operation) => (...args) => args.reduce(operation),
+    filter: (operation) => (...args) => args.filter(operation),
+    some: (operation) => (...args) => args.some(operation),
+    any: (operation) => (...args) => args.every(operation),
+    '|>': (operation) => (...args) => toOperation(args[0])(operation),
+    '>>': (operation) => (...args) => {
+      const action = toOperation(args[0])
+      return (...data: TExpression) => action(operation(...data))
+    }
   }
 
   const actionsWithPrefix = setPrefix(actions, actionsPrefix)
