@@ -59,6 +59,5 @@ test('Current call', t => {
   const date = new Date()
   const time = timePeriodToMilliseconds([date.getHours(), date.getMinutes()])
   const action = actionsBuilder(expression)[0]
-  console.log(action(time), currentCall(time))
   t.is(action(time), currentCall(time))
 })
