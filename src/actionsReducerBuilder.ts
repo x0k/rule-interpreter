@@ -49,7 +49,11 @@ function actionReducer (action: string, data: TExpression) {
     case '>>': {
       const [ f, g ] = data.slice(0, 2).map(toOperation)
       const composition = (...data: TExpression) => g(f(...data))
-      return [ composition, ...data.slice(2) ]
+      return [composition, ...data.slice(2)]
+    }
+    case 'eval': {
+      const operation = toOperation(data[0])
+      return [operation(), ...data.slice(1)]
     }
     case 'map': {
       const array = toExpression(data[0])
