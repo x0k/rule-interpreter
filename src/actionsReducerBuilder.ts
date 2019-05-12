@@ -1,4 +1,4 @@
-import { TExpression, TOperations, TOperation } from 'types'
+import { TExpression, TOperations, TOperation } from './types'
 
 function typeError (expected: string, element: any) {
   return new TypeError(`Expected ${expected}, but got ${typeof element}`)

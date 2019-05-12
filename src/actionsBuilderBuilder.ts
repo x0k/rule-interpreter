@@ -2,7 +2,7 @@ import {
   IDictionary,
   TOperations,
   TExpression
-} from 'types'
+} from './types'
 
 import { buildActionsReducer } from './actionsReducerBuilder'
 
