@@ -1,5 +1,23 @@
 import { TExpression, TOperations, TOperation } from 'types'
 
+function typeError (expected: string, element: any) {
+  return new TypeError(`Expected ${expected}, but got ${typeof element}`)
+}
+
+function toExpression (element: any): TExpression {
+  if (!Array.isArray(element)) {
+    throw typeError('array', element)
+  }
+  return element
+}
+
+function toOperation (element: any): TOperation {
+  if (typeof element === 'function') {
+    return element
+  }
+  throw typeError('function', element)
+}
+
 function toType (element: any) {
   return (typeof element === 'string' && element[0]) ||
     (Array.isArray(element) && 'array') ||
@@ -20,33 +38,23 @@ function getType (element: any) {
   }
 }
 
-function toExpression (element: any): TExpression {
-  if (!Array.isArray(element)) {
-    throw new Error(`Function haven't default args`)
-  }
-  return element
-}
-
 function functionReducer (operation: TOperation, data: TExpression) {
   const defaultArgs = toExpression(data[0])
   const operationWrapper = (...args: TExpression) => operation.apply(null, defaultArgs.concat(args))
   return [operationWrapper, ...data.slice(1)]
 }
 
-function getFunctions (data: TExpression) {
-  const functions = data.slice(0, 2)
-  if (functions.every(fn => typeof fn === 'function')) {
-    return functions
-  }
-  throw new Error(`Arguments must be functions`)
-}
-
 function actionReducer (action: string, data: TExpression) {
   switch (action) {
     case '>>': {
-      const [ f, g ] = getFunctions(data)
+      const [ f, g ] = data.slice(0, 2).map(toOperation)
       const composition = (...data: TExpression) => g(f(...data))
       return [ composition, ...data.slice(2) ]
+    }
+    case 'map': {
+      const array = toExpression(data[0])
+      const operation = toOperation(data[1])
+      return [array.map(operation), ...data.slice(2)]
     }
     default:
       throw new Error(`Unknown action: ${action}`)
