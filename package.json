@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "rm -rf build && tsc",
-    "test": "ava",
+    "test": "jest",
     "lint": "eslint src/*.ts",
     "prepare": "yarn build",
     "prepublishOnly": "yarn test && yarn lint"
@@ -31,9 +31,9 @@
   "devDependencies": {
     "@babel/core": "^7.2.2",
     "@babel/node": "^7.2.2",
+    "@types/jest": "^24.0.13",
     "@typescript-eslint/eslint-plugin": "^1.5.0",
     "@typescript-eslint/parser": "^1.5.0",
-    "ava": "^1.2.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "eslint": "^5.15.3",
     "eslint-config-prettier": "^4.1.0",
@@ -43,8 +43,10 @@
     "eslint-plugin-prettier": "^3.0.1",
     "eslint-plugin-promise": "^4.1.1",
     "eslint-plugin-standard": "^4.0.0",
+    "jest": "^24.8.0",
     "prettier": "^1.16.4",
-    "typescript": "3.3"
+    "ts-jest": "^24.0.2",
+    "typescript": "3.4"
   },
   "ava": {
     "files": [

@@ -1,6 +1,6 @@
 import { TOperation, TOperations, TExpression } from './types'
 
-import { buildActionsBuilder } from './actionsBuilderBuilder'
+import { buildActionsBuilder } from './buildActionsBuilder'
 
 export {
   buildActionsBuilder,

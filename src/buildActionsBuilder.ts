@@ -4,7 +4,7 @@ import {
   TExpression
 } from './types'
 
-import { buildActionsReducer } from './actionsReducerBuilder'
+import { buildActionsReducer } from './buildActionsReducer'
 
 function setPrefix<T> (dictionary: IDictionary<T>, prefix: string) {
   const prefixSetter = (acc: IDictionary<T>, key: string) => ({ ...acc, [prefix + key]: dictionary[key] })

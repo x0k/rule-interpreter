@@ -1,7 +1,7 @@
 import { TExpression, TOperations, TOperation } from './types'
 
 function typeError (expected: string, element: any) {
-  return new TypeError(`Expected ${expected}, but got ${typeof element}`)
+  return new TypeError(`Expected ${expected}, but got ${typeof element}: ${element}`)
 }
 
 function toExpression (element: any): TExpression {
@@ -73,8 +73,13 @@ export function buildActionsReducer (actionsPrefix: string, operations: TOperati
         const action = element.replace(actionsPrefix, '')
         return actionReducer(action, data)
       }
-      case 'function':
+      case 'function': {
+        const operation = operations[element]
+        if (typeof operation !== 'function') {
+          throw new Error(`Cannot find operation: ${element}`)
+        }
         return functionReducer(operations[element], data)
+      }
       case 'array':
         return [element.reduceRight(actionsReducer, []), ...data]
       case 'value':
