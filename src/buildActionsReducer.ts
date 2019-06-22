@@ -32,6 +32,7 @@ function getType (element: any) {
     case '@':
       return 'function'
     case 'array':
+    case 'object':
       return type
     default:
       return 'value'
@@ -66,24 +67,44 @@ function actionReducer (action: string, data: TExpression) {
 }
 
 export function buildActionsReducer (actionsPrefix: string, operations: TOperations) {
-  const actionsReducer = (data: TExpression, element: any): TExpression => {
-    const type = getType(element)
+  let actionsReducer: (expression: TExpression, data: any) => TExpression
+  const getElement = (type: string, element: any) => {
     switch (type) {
       case 'action': {
-        const action = element.replace(actionsPrefix, '')
-        return actionReducer(action, data)
+        return element.replace(actionsPrefix, '')
       }
       case 'function': {
         const operation = operations[element]
         if (typeof operation !== 'function') {
           throw new Error(`Cannot find operation: ${element}`)
         }
-        return functionReducer(operations[element], data)
+        return operations[element]
       }
       case 'array':
-        return [element.reduceRight(actionsReducer, []), ...data]
+        return element.reduceRight(actionsReducer, [])
+      case 'object':
+        return Object.keys(element).reduce((acc: { [name: string]: any }, key: string) => {
+          const data = element[key]
+          const type = getType(data)
+          acc[key] = getElement(type, data)
+          return acc
+        }, {})
       case 'value':
-        return [element, ...data]
+        return element
+    }
+  }
+  actionsReducer = (expression: TExpression, data: any): TExpression => {
+    const type = getType(data)
+    const element = getElement(type, data)
+    switch (type) {
+      case 'action': {
+        return actionReducer(element, expression)
+      }
+      case 'function': {
+        return functionReducer(element, expression)
+      }
+      default:
+        return [element, ...expression]
     }
   }
   return actionsReducer

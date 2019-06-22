@@ -132,3 +132,17 @@ test('Case operation', () => {
   const date = { minute: 0, hour: 18, day: 6, month: 4, year: 2019 }
   expect(action(date)).toBe(6)
 })
+
+test('Should decode object properties', () => {
+  const expression = [{
+    exp1: [ '@-', [ 2, 1 ] ],
+    exp2: [ '@/', [ 20 ] ],
+    exp3: [ '@or', [ false, '@and', [ '@condition', [], true ] ] ],
+  }]
+  const args = [ [], [ 4 ], [ 11 ] ]
+  const action = buildAction(expression)
+  const values = Object.keys(action)
+    .map(key => action[key])
+    .map(([handler], i) => handler(...args[i]))
+  expect(values).toEqual([ 1, 5, true ])
+})
